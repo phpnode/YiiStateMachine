@@ -304,7 +304,7 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 * @param AStateTransition $transition the state transition
 	 */
 	public function onAfterTransition($transition) {
-		$this->raiseEvent("onAfterEnter",$transition);
+		$this->raiseEvent("onAfterTransition",$transition);
 	}
 	/**
 	 * Returns a property value based on its name.
