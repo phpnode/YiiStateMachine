@@ -32,7 +32,7 @@ This means that in the user scenario, we could implement:
     <li>an activate() method on the *pending* state</li>
     <li>a deactivate() method on the *active* state</li>
     <li>a reactivate() method on the *inactive* state</li>
-<ul>
+</ul>
 We can also do stuff, e.g. sending a welcome email when the user transitions to the *active* state by handling the
 afterEnter() event on the *active* state. If we want to send a different email when the account is reactivated, we can
 handle that by inspecting the $from method parameter which refers to the previous state, if the previous state is *inactive*
