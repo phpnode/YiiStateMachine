@@ -1,7 +1,7 @@
-=Yii State Machine=
+<h1>Yii State Machine</h1>
 An object oriented state machine for Yii.
 
-=Why is this useful?=
+<h2>Why is this useful?</h2>
 
 As developers, we're often in the situation where we need to keep track of an object's state.
 For example, your user system might require users to activate their accounts by clicking a link on
@@ -45,7 +45,7 @@ are simply not available when the machine isn't in the right state.
 So when a user clicks their activation email, we can *transition* to the *active* state and send them an welcome email,
 safe in the knowledge that they won't get multiple welcome emails if they happen to click the activation link more than once.
 
-= Example Code =
+<h2>Example Code</h2>
 
 == First, declare our states ==
 <pre lang="php">
@@ -131,7 +131,7 @@ class UserInactiveState extends AState {
 
 </pre>
 
-== Adding the state machine to our user model ==
+<h2>Adding the state machine to our user model</h2>
 
 <pre lang="php">
 /**
@@ -170,7 +170,7 @@ class User extends CActiveRecord {
 }
 </pre>
 
-== Using it ==
+<h2>Using it</h2>
 
 <pre lang="php>
 $user = new User;
