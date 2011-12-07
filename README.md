@@ -46,8 +46,8 @@ So when a user clicks their activation email, we can *transition* to the *active
 safe in the knowledge that they won't get multiple welcome emails if they happen to click the activation link more than once.
 
 <h2>Example Code</h2>
+First, declare our states
 
-== First, declare our states ==
 <pre lang="php">
 /**
  * A state that applies when the user's account is pending activation
