@@ -172,7 +172,7 @@ class User extends CActiveRecord {
 
 <h2>Using it</h2>
 
-<pre lang="php>
+<pre lang="php">
 $user = new User;
 $user->name = "Test User";
 $user->email = "test@example.com";
