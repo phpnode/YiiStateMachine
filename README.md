@@ -1,5 +1,6 @@
 <h1>Yii State Machine</h1>
-An object oriented state machine for Yii.
+An object oriented state machine for Yii. It can be used independently or as a behavior to augment your existing components / models.
+
 
 <h2>Why is this useful?</h2>
 
