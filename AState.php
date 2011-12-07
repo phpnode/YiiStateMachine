@@ -5,12 +5,12 @@
  * @author Charles Pick
  * @package packages.stateMachine
  */
-class AState extends CComponent {
+class AState extends CBehavior {
 	/**
 	 * The state machine this state belongs to
 	 * @var AStateMachine
 	 */
-	protected $_owner;
+	protected $_machine;
 
 	/**
 	 * The name of this state
@@ -25,7 +25,7 @@ class AState extends CComponent {
 	 */
 	public function __construct($name, AStateMachine $owner) {
 		$this->setName($name);
-		$this->setOwner($owner);
+		$this->setMachine($owner);
 	}
 
 	/**
@@ -35,7 +35,7 @@ class AState extends CComponent {
 	public function beforeEnter() {
 		$transition = new AStateTransition($this);
 		$transition->to = $this;
-		$transition->from = $this->_owner->getState();
+		$transition->from = $this->_machine->getState();
 		$this->onBeforeEnter($transition);
 		return $transition->isValid;
 	}
@@ -90,7 +90,7 @@ class AState extends CComponent {
 	public function afterExit() {
 		$transition = new AStateTransition($this);
 		$transition->from = $this;
-		$transition->to = $this->_owner->getState();
+		$transition->to = $this->_machine->getState();
 		$this->onAfterExit($transition);
 	}
 	/**
@@ -122,15 +122,15 @@ class AState extends CComponent {
 	 * @param AStateMachine $owner the state machine this state belongs to
 	 * @return AStateMachine the state machine
 	 */
-	public function setOwner($owner) {
-		return $this->_owner = $owner;
+	public function setMachine($owner) {
+		return $this->_machine = $owner;
 	}
 
 	/**
 	 * Gets the state machine the state belongs to
 	 * @return AStateMachine
 	 */
-	public function getOwner() {
-		return $this->_owner;
+	public function getMachine() {
+		return $this->_machine;
 	}
 }

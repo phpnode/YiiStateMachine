@@ -58,7 +58,7 @@ class UserPendingState extends AState {
      * Activates the user's account
      */
     public function activate() {
-        $machine = $this->getOwner();
+        $machine = $this->getMachine();
         $user = $machine->getOwner();
         $user->status = "active";
         $user->save();
@@ -75,7 +75,7 @@ class UserActiveState extends AState {
      * Deactivates the user's account
      */
     public function deactivate() {
-        $machine = $this->getOwner();
+        $machine = $this->getMachine();
         $user = $machine->getOwner();
         $user->status = "inactive";
         $user->save();
@@ -104,7 +104,7 @@ class UserInactiveState extends AState {
      * Reactivates the user's account
      */
     public function reactivate() {
-        $machine = $this->getOwner();
+        $machine = $this->getMachine();
         $user = $machine->getOwner();
         $user->status = "active";
         $user->save();
@@ -114,7 +114,7 @@ class UserInactiveState extends AState {
      * Invoked before the state is transitioned to
      */
     protected function beforeEnter() {
-        if ($this->getOwner()->getState()->name == "pending") {
+        if ($this->getMachine()->getState()->name == "pending") {
             // invalid state transition, user cannot go pending -> deactivated
             return false;
         }
@@ -126,7 +126,7 @@ class UserInactiveState extends AState {
      */
     protected function afterEnter(AState $from) {
         parent::afterEnter($from);
-        Yii::log($this->getOwner->getOwner->name." deactivated their account :(");
+        Yii::log($this->getMachine()->getOwner()->name." deactivated their account :(");
     }
 }
 

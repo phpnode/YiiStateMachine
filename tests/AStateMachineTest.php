@@ -75,6 +75,7 @@ class AStateMachineTest extends CTestCase {
 		$component = new CComponent();
 		$component->attachBehavior("status",$machine);
 		$this->assertTrue($component->is("enabled"));
+		$this->assertTrue($component->demoMethod());
 		$this->assertTrue($component->transition("disabled"));
 		$this->assertTrue($component->status->is("disabled"));
 	}
@@ -103,7 +104,11 @@ class ExampleEnabledState extends AState {
 	 * Sets the state to disabled
 	 */
 	public function disable() {
-		$this->_owner->transition("disabled");
+		$this->_machine->transition("disabled");
+	}
+
+	public function demoMethod() {
+		return true;
 	}
 }
 /**
@@ -121,7 +126,7 @@ class ExampleDisabledState extends AState {
 	 * Sets the state to enabled
 	 */
 	public function enable() {
-		$this->_owner->transition("enabled");
+		$this->_machine->transition("enabled");
 	}
 }
 
@@ -143,7 +148,7 @@ class ExampleIntermediateState extends AState {
 	 * @return boolean whether the transition should continue
 	 */
 	public function beforeEnter() {
-		$fromState = $this->_owner->getState();
+		$fromState = $this->_machine->getState();
 		if ($fromState->getName() == "enabled") {
 			return false;
 		}

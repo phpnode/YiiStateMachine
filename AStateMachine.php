@@ -26,6 +26,7 @@
  * @package packages.stateMachine
  */
 class AStateMachine extends CBehavior implements IApplicationComponent {
+
 	/**
 	 * Holds the name of the default state.
 	 * Defaults to "default"
@@ -72,6 +73,13 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	protected $_isInitialized = false;
 
 	/**
+	 * The unique id for this state machine.
+	 * This is used when the machine is attached as a behavior
+	 * @var string
+	 */
+	protected $_uniqueID;
+
+	/**
 	 * Constructor.
 	 * The default implementation calls the init() method
 	 */
@@ -88,6 +96,30 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	public function init() {
 		$this->_isInitialized = true;
 	}
+	/**
+	 * Attaches the state machine to a component
+	 * @param CComponent $owner the component to attach to
+	 */
+	public function attach($owner) {
+		parent::attach($owner);
+		if ($this->_uniqueID === null) {
+			$this->_uniqueID = uniqid();
+		}
+		if (($state = $this->getState()) !== null) {
+			$owner->attachBehavior($this->_uniqueID."_".$state->name,$state);
+		}
+	}
+	/**
+	 * Detaches the state machine from a component
+	 * @param CComponent $owner the component to detach from
+	 */
+	public function detach($owner) {
+		parent::detach($owner);
+		if ($this->_uniqueID !== null) {
+			$owner->detachBehavior($this->_uniqueID."_".$this->getStateName());
+		}
+	}
+
 	/**
 	 * Determines whether the state machine has been initialized or not
 	 * @return boolean
@@ -206,7 +238,18 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 		if (!$this->beforeTransition($toState)) {
 			return false;
 		}
-		$this->setStateName($to);
+
+		if (($owner = $this->getOwner()) !== null) {
+
+			// we need to attach the current state to the owner
+			$owner->detachBehavior($this->_uniqueID."_".$this->getStateName());
+			$this->setStateName($to);
+			$owner->attachBehavior($this->_uniqueID."_".$to,$toState);
+		}
+		else {
+			$this->setStateName($to);
+		}
+
 		if ($this->enableTransitionHistory) {
 			if ($this->maximumTransitionHistorySize !== null && ($c = $this->getTransitionHistory()->count() - $this->maximumTransitionHistorySize) >= 0) {
 				for($i = 0; $i <= $c; $i++) {
