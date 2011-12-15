@@ -162,7 +162,7 @@ class User extends CActiveRecord {
                         "name" => "inactive",
                     ),
                 ),
-                "defaultState" => "pending",
+                "defaultStateName" => "pending",
                 "stateName" => $this->status,
             )
         );
