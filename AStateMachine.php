@@ -231,9 +231,7 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 * @return boolean true if the transition succeeded or false if it failed
 	 */
 	public function transition($to, $params=null) {
-        print_r(1);
 		if (!$this->hasState($to)) {
-            print_r(2);
 			throw new AInvalidStateException("No such state: ".$to);
 		}
 		$toState = $this->_states[$to];
