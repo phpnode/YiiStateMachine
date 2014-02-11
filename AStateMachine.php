@@ -227,15 +227,16 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 * Transitions the state machine to the specified state
 	 * @throws AInvalidStateException if the state doesn't exist
 	 * @param string $to The name of the state we're transitioning to
+     * @param mixed $params additional parameters for the before/after Transition events
 	 * @return boolean true if the transition succeeded or false if it failed
 	 */
-	public function transition($to) {
+	public function transition($to, $params=null) {
 		if (!$this->hasState($to)) {
 			throw new AInvalidStateException("No such state: ".$to);
 		}
 		$toState = $this->_states[$to];
 		$fromState = $this->getState();
-		if (!$this->beforeTransition($toState)) {
+		if (!$this->beforeTransition($toState, $params)) {
 			return false;
 		}
 
@@ -259,20 +260,21 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 			}
 			$this->getTransitionHistory()->add($to);
 		}
-		$this->afterTransition($fromState);
+		$this->afterTransition($fromState, $params);
 		return true;
 	}
 
 	/**
 	 * Invoked before a state transition
 	 * @param AState $toState The state we're transitioning to
+     * @param mixed $params additional parameters for the event
 	 * @return boolean true if the event is valid and the transition should be allowed to continue
 	 */
-	public function beforeTransition(AState $toState) {
+	public function beforeTransition(AState $toState, $params=null) {
 		if (!$this->getState()->beforeExit($toState) || !$toState->beforeEnter()) {
 			return false;
 		}
-		$transition = new AStateTransition($this);
+		$transition = new AStateTransition($this, $params);
 		$transition->to = $toState;
 		$transition->from = $this->getState();
 		$this->onBeforeTransition($transition);
@@ -289,12 +291,13 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	/**
 	 * Invoked after a state transition
 	 * @param AState $from The state we're transitioning from
+     * @param mixed $params additional parameters for the event
 	 */
-	public function afterTransition(AState $fromState) {
+	public function afterTransition(AState $fromState, $params=null) {
 		$fromState->afterExit();
 		$this->getState()->afterEnter($fromState);
 
-		$transition = new AStateTransition($this);
+		$transition = new AStateTransition($this, $params);
 		$transition->to = $this->getState();
 		$transition->from = $fromState;
 		$this->onAfterTransition($transition);

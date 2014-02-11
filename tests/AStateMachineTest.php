@@ -79,6 +79,62 @@ class AStateMachineTest extends CTestCase {
 		$this->assertTrue($component->transition("disabled"));
 		$this->assertTrue($component->status->is("disabled"));
 	}
+
+    public function testEvents()
+    {
+        $machine = $this->getMock("AStateMachine", array("onBeforeTransition", "onAfterTransition"));
+
+        $enabled  = $this->getMock("AState", array("onBeforeEnter", "onBeforeExit", "onAfterEnter", "onAfterExit"), array("enabled", $machine));
+        $disabled = $this->getMock("AState", array("onBeforeEnter", "onBeforeExit", "onAfterEnter", "onAfterExit"), array("disabled", $machine));
+
+        $machine->setStates(array($enabled,$disabled));
+		$machine->defaultStateName = "enabled";
+        
+        $params           = array("param"=>1, "param"=>2);
+        $transition       = new AStateTransition($machine, $params);
+        $transition->to   = $disabled;
+        $transition->from = $enabled;
+
+        $machine->expects($this->once())
+            ->method("onBeforeTransition")
+            ->with($transition);
+
+        $machine->expects($this->once())
+            ->method("onAfterTransition")
+            ->with($transition);
+
+        $enabledTransition = new AStateTransition($enabled);
+        $enabledTransition->to = $disabled;
+        $enabledTransition->from = $enabled;
+
+        $enabled->expects($this->never())
+            ->method("onBeforeEnter");
+        $enabled->expects($this->never())
+            ->method("onAfterEnter");
+        $enabled->expects($this->once())
+            ->method("onBeforeExit")
+            ->with($enabledTransition);
+        $enabled->expects($this->once())
+            ->method("onAfterExit")
+            ->with($enabledTransition);
+    
+        $disabledTransition = new AStateTransition($disabled);
+        $disabledTransition->to = $disabled;
+        $disabledTransition->from = $enabled;
+
+        $disabled->expects($this->never())
+            ->method("onBeforeExit");
+        $disabled->expects($this->never())
+             ->method("onAfterExit");
+        $disabled->expects($this->once())
+             ->method("onBeforeEnter")
+             ->with($disabledTransition);
+        $disabled->expects($this->once())
+            ->method("onAfterEnter")
+            ->with($disabledTransition);
+
+        $this->assertTrue($machine->transition("disabled", $params));
+    }
 }
 
 
@@ -155,4 +211,3 @@ class ExampleIntermediateState extends AState {
 		return parent::beforeEnter();
 	}
 }
-
