@@ -50,6 +50,12 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 */
 	public $maximumTransitionHistorySize;
 
+        /**
+         * Defines whather to use AState.transitsTo attribute to check transition validity
+         * @var boolean 
+         */
+        public $checkTransitionMap = false;
+        
 	/**
 	 * Holds the transition history
 	 * @var CList
@@ -227,7 +233,7 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 * Transitions the state machine to the specified state
 	 * @throws AInvalidStateException if the state doesn't exist
 	 * @param string $to The name of the state we're transitioning to
-     * @param mixed $params additional parameters for the before/after Transition events
+         * @param mixed $params additional parameters for the before/after Transition events
 	 * @return boolean true if the transition succeeded or false if it failed
 	 */
 	public function transition($to, $params=null) {
@@ -236,10 +242,11 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 		}
 		$toState = $this->_states[$to];
 		$fromState = $this->getState();
-		if (!$this->beforeTransition($toState, $params)) {
-			return false;
-		}
 
+                if (!$this->canTransit($to, $params)) {
+                        return false;
+                }
+                
 		if (($owner = $this->getOwner()) !== null) {
 
 			// we need to attach the current state to the owner
@@ -265,9 +272,29 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	}
 
 	/**
+	 * Checks can the state machine transite to the specified state
+	 * @throws AInvalidStateException if the state doesn't exist
+	 * @param string $to The name of the state we're transitioning to
+         * @param mixed $params additional parameters for the before/after Transition events
+	 * @return boolean true if the transition succeeded or false if it failed
+	 */        
+        public function canTransit($to, $params=null) {
+                if (!$this->hasState($to)) {
+                        throw new AInvalidStateException("No such state: ".$to);
+                }
+                $toState = $this->_states[$to];
+                
+                if (!$this->beforeTransition($toState, $params)) {
+                        return false;
+                }
+                
+                return true;
+        }
+        
+	/**
 	 * Invoked before a state transition
 	 * @param AState $toState The state we're transitioning to
-     * @param mixed $params additional parameters for the event
+         * @param mixed $params additional parameters for the event
 	 * @return boolean true if the event is valid and the transition should be allowed to continue
 	 */
 	public function beforeTransition(AState $toState, $params=null) {

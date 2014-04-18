@@ -61,6 +61,80 @@ class AStateMachineTest extends CTestCase {
 		$this->assertTrue($machine->transition("intermediate")); // should work
 		$this->assertEquals(2, $machine->getTransitionHistory()->count());
 	}
+        
+        public function testCanTransit() {
+                $machine = new AStateMachine();
+                $machine->setStates(array(
+                    new ExampleEnabledState("enabled",$machine),
+                    new ExampleDisabledState("disabled",$machine),
+                    new ExampleIntermediateState("intermediate", $machine),
+                ));
+                $machine->defaultStateName = "enabled";
+
+                $this->assertFalse($machine->canTransit("intermediate")); // intermediate state blocks transition from enabled -> intermediate
+
+                $this->assertTrue($machine->canTransit("disabled"));
+                $this->assertTrue($machine->transition("disabled"));
+
+                $this->assertTrue($machine->canTransit("intermediate"));
+                $this->assertTrue($machine->transition("intermediate")); // should work   
+        }
+        
+        public function testCanTransitWithTransitionsMapSpecified() {
+                $machine = new AStateMachine();
+                $machine->setStates(array(
+                    array(
+                        'name'=>'published',
+                        'transitsTo'=>'registration, canceled'
+                    ),
+                    array(
+                        'name'=>'registration',
+                        'transitsTo'=>'published, processing, canceled'
+                    ),
+                    array(
+                        'name'=>'processing',
+                        'transitsTo'=>'finished, canceled'
+                    ),
+                    array('name'=>'finished'),
+                    array('name'=>'canceled')
+                ));
+                $machine->defaultStateName = "published";
+                $machine->checkTransitionMap = true;
+
+                $this->assertFalse($machine->canTransit("processing"));
+                $this->assertFalse($machine->canTransit("finished"));
+                $this->assertFalse($machine->canTransit("published"));
+
+                $this->assertTrue($machine->canTransit("registration"));
+                $this->assertTrue($machine->canTransit("canceled"));
+                
+                $this->assertTrue($machine->transition("registration"));
+                
+                $this->assertFalse($machine->canTransit("finished"));
+                $this->assertFalse($machine->canTransit("registration"));
+                
+                $this->assertTrue($machine->canTransit("published"));
+                $this->assertTrue($machine->canTransit("processing"));
+                $this->assertTrue($machine->canTransit("canceled"));                
+
+                $this->assertTrue($machine->transition("processing"));
+                
+                $this->assertFalse($machine->canTransit("processing"));
+                $this->assertFalse($machine->canTransit("registration"));
+                $this->assertFalse($machine->canTransit("published"));
+                
+                $this->assertTrue($machine->canTransit("finished"));
+                $this->assertTrue($machine->canTransit("canceled"));
+                
+                $this->assertTrue($machine->transition("finished"));
+                
+                $this->assertFalse($machine->canTransit("finished"));
+                $this->assertFalse($machine->canTransit("processing"));
+                $this->assertFalse($machine->canTransit("registration"));
+                $this->assertFalse($machine->canTransit("published"));
+                $this->assertFalse($machine->canTransit("canceled"));
+        }
+        
 	/**
 	 * Tests for the behavior functionality
 	 */

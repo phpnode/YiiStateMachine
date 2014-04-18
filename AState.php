@@ -18,7 +18,13 @@ class AState extends CBehavior {
 	 */
 	protected $_name;
 
-	/**
+        /**
+         * Names of the states which can replace current state
+         * @var array 
+         */
+        protected $_transitsTo;
+
+        /**
 	 * Constructor
 	 * @param string $name The name of the state
 	 * @param AStateMachine $owner the state machine this state belongs to
@@ -73,6 +79,11 @@ class AState extends CBehavior {
 		$transition = new AStateTransition($this);
 		$transition->to = $toState;
 		$transition->from = $this;
+                
+                if($this->_machine->checkTransitionMap && !in_array($toState->name, $this->transitsTo)) {
+                        $transition->isValid = false;
+                }
+                
 		$this->onBeforeExit($transition);
 		return $transition->isValid;
 	}
@@ -133,4 +144,29 @@ class AState extends CBehavior {
 	public function getMachine() {
 		return $this->_machine;
 	}
+        
+        /**
+         * 
+         * @param mixed $states
+         */
+        public function setTransitsTo($states) {
+                $transitsTo = $states;
+            
+                if(!is_array($states)) {
+                    if(is_string($states)) {
+                        if(strstr($states, ',') !== FALSE) {
+                            $transitsTo = explode(',', preg_replace('/\s+/', '', $states));
+                        }else
+                            $transitsTo = array(trim($states));
+                    } else {
+                        throw new AStateException('Invalide transitsTo format: ' . print_r($states, true));
+                    }
+                }
+                
+                $this->_transitsTo = $transitsTo;
+        }
+        
+        public function getTransitsTo() {
+            return ($this->_transitsTo) ? $this->_transitsTo : array();
+        }
 }
