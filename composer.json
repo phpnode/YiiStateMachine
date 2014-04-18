@@ -1,8 +1,6 @@
 {
     "name": "vasiliy-pdk/YiiStateMachine",
     "description": "State machine behavior for Yii framework.",
-    "require": {
-        "php": ">=5.3.0",
-        "yiisoft/yii":">=1.1.13"
-    }
+    "type": "yii-extension",
+    "keywords": ["yii", "state machine", "FSM", "finite-state machine"]
 }
