@@ -51,7 +51,34 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	public $maximumTransitionHistorySize;
 
         /**
-         * Defines whather to use AState.transitsTo attribute to check transition validity
+         * Defines whather to use AState.transitsTo attribute to check transition validity.
+         * If it was set to TRUE than you should specify which states can be reached from current.
+         * For example:
+         * <pre>
+         *      $machine = new AStateMachine();
+         *      $machine->setStates(array(
+         *          array(
+         *              'name'=>'not_saved',
+         *              'transitsTo'=>'published'
+         *          ),
+         *          array(
+         *              'name'=>'published',
+         *              'transitsTo'=>'registration, canceled',
+         *          ),
+         *          array(
+         *              'name'=>'registration',
+         *              'transitsTo'=>'published, processing, canceled'
+         *          ),
+         *          array(
+         *              'name'=>'processing',
+         *              'transitsTo'=>'finished, canceled'
+         *          ),
+         *          array('name'=>'finished'),
+         *          array('name'=>'canceled')
+         *      ));
+         *      $machine->checkTransitionMap = true;
+         * </pre>
+         * 
          * @var boolean 
          */
         public $checkTransitionMap = false;
@@ -439,7 +466,10 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	}
         
         /**
-         * Returns available states that can be reached from current
+         * Returns available states that can be reached from current.
+         * It is usefull when you want allow user to chose next state somewhere in
+         * an UI.
+         * 
          * @return array
          */
         public function getAvailableStates() {
