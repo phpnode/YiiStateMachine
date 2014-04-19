@@ -186,3 +186,131 @@ $user->reactivate(); // reactivates the user
 $user->activationStatus->deactivate(); // call the state machine directly
 </pre>
 
+<h2>Specifying states map</h2>
+
+Often we need to check what state can become active after current. We can override
+beforeExit or beforeEnter methods of AState as described.
+
+<pre>
+    /**
+     * Invoked before the state is transitioned to
+     */
+    protected function beforeEnter() {
+        if ($this->getMachine()->getState()->name == "pending") {
+            // invalid state transition, user cannot go pending -> deactivated
+            return false;
+        }
+        return parent::beforeEnter();
+    }
+</pre>
+
+This approach is very flexible but it may make you crazy if you should describe a big graph of states. 
+In this case you can free your time by setting *AStateMachine.checkTransitionMap* to *TRUE*
+and specifying *AState.transitsTo* attribute for all states. This attribute describes which states can 
+be reached from current. See example below.
+
+<pre>
+    /**
+     * Represents deputy election process. 
+     */
+    class Election extends CActiveRecord {
+
+        public static $statuses = array(
+            Election::STATUS_PUBLISHED    => 'Published',
+            Election::STATUS_REGISTRATION => 'Registration',
+            Election::STATUS_ELECTION => 'Election',
+            Election::STATUS_FINISHED => 'Finished',
+            Election::STATUS_CANCELED => 'Canceled',
+        );
+
+        public function getStatusName() {
+            return self::$statuses[$this->status];
+        }
+
+        /**
+         *  ... other methods ...
+         */
+        public function behaviors() {
+            return array(
+                "state" => array(
+                    "class" => "AStateMachine",
+                    "states" => array(
+                        array(
+                            'name'=>'not_saved',
+                            'transitsTo'=>'Published'
+                        ),
+                        array(
+                            'name'=>'Published',
+                            'transitsTo'=>'Registration, Canceled'
+                        ),
+                        array(
+                            'name'=>'Registration',
+                            'transitsTo'=>'Published, Election, Canceled'
+                        ),
+                        array(
+                            'name'=>'Election',
+                            'transitsTo'=>'Finished, Canceled'
+                        ),
+                        array(
+                            'name'=>'Finished',
+                            'class'=>'ElectionFinishedState'
+                        ),
+                        array('name'=>'Canceled')
+                    ),
+                    "defaultStateName" => "not_saved",
+                    "checkTransitionMap" => true,
+                    "stateName" => $this->statusName,
+                )
+            );
+        }
+        /**
+         *  ... other methods ...
+         */
+    }
+
+    class ElectionFinishedState extends AState {
+    
+        public function finish() {
+            // ...
+        }
+
+        // ...
+
+        public function afterEnter(AState $from) {
+            parent::afterEnter($from);
+            $this->finish();
+        }
+    }
+</pre>
+
+So lets see which states can be reached.
+
+<pre>
+    $election = new Election;
+    echo $election->stateName;      // "not_saved"
+    echo $election->canTransit('Published');    // true
+    
+    echo $election->canTransit('Registration'); // false
+    echo $election->canTransit('Finished');     // false
+    // ... Election and Canceled will return false too
+
+    $election->transition('Published');
+    echo $election->canTransit('Published');    // false because we already here
+    
+    echo $election->canTransit('Registration'); // true
+    echo $election->canTransit('Election');     // false
+    echo $election->canTransit('Finished');     // false
+    echo $election->canTransit('Canceled');     // true
+
+    $election->transition('Registration');
+    $election->availableStates;                 // return array('Published', 'Election', 'Canceled')
+
+    $election->transition('Election');
+    $election->availableStates;                 // return array('Finished', 'Canceled')
+
+    $election->transition('Finished');
+    $election->availableStates;                 // return array()
+</pre>
+
+Here we saw *availableStates* attribute ( or *getAvailableStates()* ). This is useful
+method when we want provide ability to switch state by user in an UI.

@@ -1,0 +1,6 @@
+{
+    "name": "vasiliy-pdk/YiiStateMachine",
+    "description": "State machine behavior for Yii framework.",
+    "type": "yii-extension",
+    "keywords": ["yii", "state machine", "FSM", "finite-state machine"]
+}

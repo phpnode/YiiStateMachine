@@ -61,7 +61,127 @@ class AStateMachineTest extends CTestCase {
 		$this->assertTrue($machine->transition("intermediate")); // should work
 		$this->assertEquals(2, $machine->getTransitionHistory()->count());
 	}
-	/**
+        
+        public function testCanTransit() {
+                $machine = new AStateMachine();
+                $machine->setStates(array(
+                    new ExampleEnabledState("enabled",$machine),
+                    new ExampleDisabledState("disabled",$machine),
+                    new ExampleIntermediateState("intermediate", $machine),
+                ));
+                $machine->defaultStateName = "enabled";
+
+                $this->assertFalse($machine->canTransit("intermediate")); // intermediate state blocks transition from enabled -> intermediate
+
+                $this->assertTrue($machine->canTransit("disabled"));
+                $this->assertTrue($machine->transition("disabled"));
+
+                $this->assertTrue($machine->canTransit("intermediate"));
+                $this->assertTrue($machine->transition("intermediate")); // should work   
+        }
+        
+        public function testCanTransitWithTransitionsMapSpecified() {
+                $machine = new AStateMachine();
+                $machine->setStates(array(
+                    array(
+                        'name'=>'published',
+                        'transitsTo'=>'registration, canceled'
+                    ),
+                    array(
+                        'name'=>'registration',
+                        'transitsTo'=>'published, processing, canceled'
+                    ),
+                    array(
+                        'name'=>'processing',
+                        'transitsTo'=>'finished, canceled'
+                    ),
+                    array('name'=>'finished'),
+                    array('name'=>'canceled')
+                ));
+                $machine->defaultStateName = "published";
+                $machine->checkTransitionMap = true;
+
+                $this->assertFalse($machine->canTransit("processing"));
+                $this->assertFalse($machine->canTransit("finished"));
+                $this->assertFalse($machine->canTransit("published"));
+
+                $this->assertTrue($machine->canTransit("registration"));
+                $this->assertTrue($machine->canTransit("canceled"));
+                
+                $this->assertTrue($machine->transition("registration"));
+                
+                $this->assertFalse($machine->canTransit("finished"));
+                $this->assertFalse($machine->canTransit("registration"));
+                
+                $this->assertTrue($machine->canTransit("published"));
+                $this->assertTrue($machine->canTransit("processing"));
+                $this->assertTrue($machine->canTransit("canceled"));                
+
+                $this->assertTrue($machine->transition("processing"));
+                
+                $this->assertFalse($machine->canTransit("processing"));
+                $this->assertFalse($machine->canTransit("registration"));
+                $this->assertFalse($machine->canTransit("published"));
+                
+                $this->assertTrue($machine->canTransit("finished"));
+                $this->assertTrue($machine->canTransit("canceled"));
+                
+                $this->assertTrue($machine->transition("finished"));
+                
+                $this->assertFalse($machine->canTransit("finished"));
+                $this->assertFalse($machine->canTransit("processing"));
+                $this->assertFalse($machine->canTransit("registration"));
+                $this->assertFalse($machine->canTransit("published"));
+                $this->assertFalse($machine->canTransit("canceled"));
+        }
+        
+        public function testGetAvailableStates() {
+                $machine = new AStateMachine();
+                $machine->setStates(array(
+                    array(
+                        'name'=>'not_saved',
+                        'transitsTo'=>'published'
+                    ),
+                    array(
+                        'name'=>'published',
+                        'transitsTo'=>'registration, canceled',
+                    ),
+                    array(
+                        'name'=>'registration',
+                        'transitsTo'=>'published, processing, canceled'
+                    ),
+                    array(
+                        'name'=>'processing',
+                        'transitsTo'=>'finished, canceled'
+                    ),
+                    array('name'=>'finished'),
+                    array('name'=>'canceled')
+                ));
+                $machine->checkTransitionMap = true;
+                $machine->defaultStateName = 'not_saved';
+                
+                $this->checkStates(array('published'), $machine->availableStates);
+                
+                $machine->transition('published');
+                $this->checkStates(array('registration', 'canceled'), $machine->availableStates);
+                
+                $machine->transition('registration');
+                $this->checkStates(array('published', 'processing', 'canceled'), $machine->availableStates);
+                
+                $machine->transition('processing');
+                $this->checkStates(array('finished', 'canceled'), $machine->availableStates);
+                
+                $machine->transition('finished');
+                $this->checkStates(array(), $machine->availableStates);
+        }
+
+        protected function checkStates($shouldBeAvailable, $states) {
+                $this->assertCount(count($shouldBeAvailable), $states);
+                foreach ($shouldBeAvailable as $state)
+                    $this->assertContains($state, $states);
+        }
+        
+        /**
 	 * Tests for the behavior functionality
 	 */
 	public function testBehavior() {

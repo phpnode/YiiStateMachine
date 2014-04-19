@@ -50,6 +50,39 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 */
 	public $maximumTransitionHistorySize;
 
+        /**
+         * Defines whather to use AState.transitsTo attribute to check transition validity.
+         * If it was set to TRUE than you should specify which states can be reached from current.
+         * For example:
+         * <pre>
+         *      $machine = new AStateMachine();
+         *      $machine->setStates(array(
+         *          array(
+         *              'name'=>'not_saved',
+         *              'transitsTo'=>'published'
+         *          ),
+         *          array(
+         *              'name'=>'published',
+         *              'transitsTo'=>'registration, canceled',
+         *          ),
+         *          array(
+         *              'name'=>'registration',
+         *              'transitsTo'=>'published, processing, canceled'
+         *          ),
+         *          array(
+         *              'name'=>'processing',
+         *              'transitsTo'=>'finished, canceled'
+         *          ),
+         *          array('name'=>'finished'),
+         *          array('name'=>'canceled')
+         *      ));
+         *      $machine->checkTransitionMap = true;
+         * </pre>
+         * 
+         * @var boolean 
+         */
+        public $checkTransitionMap = false;
+        
 	/**
 	 * Holds the transition history
 	 * @var CList
@@ -227,7 +260,7 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	 * Transitions the state machine to the specified state
 	 * @throws AInvalidStateException if the state doesn't exist
 	 * @param string $to The name of the state we're transitioning to
-     * @param mixed $params additional parameters for the before/after Transition events
+         * @param mixed $params additional parameters for the before/after Transition events
 	 * @return boolean true if the transition succeeded or false if it failed
 	 */
 	public function transition($to, $params=null) {
@@ -236,10 +269,11 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 		}
 		$toState = $this->_states[$to];
 		$fromState = $this->getState();
-		if (!$this->beforeTransition($toState, $params)) {
-			return false;
-		}
 
+                if (!$this->canTransit($to, $params)) {
+                        return false;
+                }
+                
 		if (($owner = $this->getOwner()) !== null) {
 
 			// we need to attach the current state to the owner
@@ -265,9 +299,29 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	}
 
 	/**
+	 * Checks can the state machine transite to the specified state
+	 * @throws AInvalidStateException if the state doesn't exist
+	 * @param string $to The name of the state we're transitioning to
+         * @param mixed $params additional parameters for the before/after Transition events
+	 * @return boolean true if the transition succeeded or false if it failed
+	 */        
+        public function canTransit($to, $params=null) {
+                if (!$this->hasState($to)) {
+                        throw new AInvalidStateException("No such state: ".$to);
+                }
+                $toState = $this->_states[$to];
+                
+                if (!$this->beforeTransition($toState, $params)) {
+                        return false;
+                }
+                
+                return true;
+        }
+        
+	/**
 	 * Invoked before a state transition
 	 * @param AState $toState The state we're transitioning to
-     * @param mixed $params additional parameters for the event
+         * @param mixed $params additional parameters for the event
 	 * @return boolean true if the event is valid and the transition should be allowed to continue
 	 */
 	public function beforeTransition(AState $toState, $params=null) {
@@ -291,7 +345,7 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	/**
 	 * Invoked after a state transition
 	 * @param AState $from The state we're transitioning from
-     * @param mixed $params additional parameters for the event
+         * @param mixed $params additional parameters for the event
 	 */
 	public function afterTransition(AState $fromState, $params=null) {
 		$fromState->afterExit();
@@ -410,4 +464,22 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 		}
 		return $this->_transitionHistory;
 	}
+        
+        /**
+         * Returns available states that can be reached from current.
+         * It is usefull when you want allow user to chose next state somewhere in
+         * an UI.
+         * 
+         * @return array
+         */
+        public function getAvailableStates() {
+            
+            $result = array();
+            
+            foreach ($this->states as $state)
+                if($this->canTransit($state->name))
+                    $result[] = $state->name;
+            
+            return $result;
+        }
 }
