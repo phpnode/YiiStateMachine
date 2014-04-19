@@ -318,7 +318,7 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 	/**
 	 * Invoked after a state transition
 	 * @param AState $from The state we're transitioning from
-     * @param mixed $params additional parameters for the event
+         * @param mixed $params additional parameters for the event
 	 */
 	public function afterTransition(AState $fromState, $params=null) {
 		$fromState->afterExit();
@@ -437,4 +437,19 @@ class AStateMachine extends CBehavior implements IApplicationComponent {
 		}
 		return $this->_transitionHistory;
 	}
+        
+        /**
+         * Returns available states that can be reached from current
+         * @return array
+         */
+        public function getAvailableStates() {
+            
+            $result = array();
+            
+            foreach ($this->states as $state)
+                if($this->canTransit($state->name))
+                    $result[] = $state->name;
+            
+            return $result;
+        }
 }

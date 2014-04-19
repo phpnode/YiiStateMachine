@@ -135,7 +135,53 @@ class AStateMachineTest extends CTestCase {
                 $this->assertFalse($machine->canTransit("canceled"));
         }
         
-	/**
+        public function testGetAvailableStates() {
+                $machine = new AStateMachine();
+                $machine->setStates(array(
+                    array(
+                        'name'=>'not_saved',
+                        'transitsTo'=>'published'
+                    ),
+                    array(
+                        'name'=>'published',
+                        'transitsTo'=>'registration, canceled',
+                    ),
+                    array(
+                        'name'=>'registration',
+                        'transitsTo'=>'published, processing, canceled'
+                    ),
+                    array(
+                        'name'=>'processing',
+                        'transitsTo'=>'finished, canceled'
+                    ),
+                    array('name'=>'finished'),
+                    array('name'=>'canceled')
+                ));
+                $machine->checkTransitionMap = true;
+                $machine->defaultStateName = 'not_saved';
+                
+                $this->checkStates(array('published'), $machine->availableStates);
+                
+                $machine->transition('published');
+                $this->checkStates(array('registration', 'canceled'), $machine->availableStates);
+                
+                $machine->transition('registration');
+                $this->checkStates(array('published', 'processing', 'canceled'), $machine->availableStates);
+                
+                $machine->transition('processing');
+                $this->checkStates(array('finished', 'canceled'), $machine->availableStates);
+                
+                $machine->transition('finished');
+                $this->checkStates(array(), $machine->availableStates);
+        }
+
+        protected function checkStates($shouldBeAvailable, $states) {
+                $this->assertCount(count($shouldBeAvailable), $states);
+                foreach ($shouldBeAvailable as $state)
+                    $this->assertContains($state, $states);
+        }
+        
+        /**
 	 * Tests for the behavior functionality
 	 */
 	public function testBehavior() {
