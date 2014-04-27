@@ -5,6 +5,6 @@
  * @author Charles Pick
  * @package packages.stateMachine
  */
-class AStateException extends CException {
-
+class AStateException extends CException
+{
 }
