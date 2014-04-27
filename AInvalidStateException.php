@@ -4,6 +4,6 @@
  * @author Charles Pick
  * @package packages.stateMachine
  */
-class AInvalidStateException extends AStateException {
-
+class AInvalidStateException extends AStateException
+{
 }
